@@ -1,5 +1,4 @@
 
-
 function equipe() {
     document.getElementById("output").textContent = "João Vitor Krueger Moutinho\nLucas Reinert\nThiago Souza Ortiz";
 };
@@ -12,42 +11,39 @@ function limpar() {
 function analisar() {
     const lexico = new Lexico(document.getElementById("input").value);
     try {
-        const list = [];
-        let teste = lexico.nextToken();
-        while (teste) {
-            list.push(teste);
-            teste = lexico.nextToken();
+        const tokens = [];
+        let token = lexico.nextToken();
+        while (token) {
+            tokens.push(token);
+            token = lexico.nextToken();
         }
-        const list2 = [];
+
         const constant = new Constants();
+        const list = [];
+        Object.keys(constant).map((element, index) => {
+            list.push({
+                id: index,
+                name: element,
+                qtd: 0
+            });
+        });
 
-        for (var i = 0; i < list.length; i++) {
-            const index = list2.findIndex((data) => data.id == list[i].id);
-            if (index < 0) {
-                const constants = Object.keys(constant)[list[i].id];
-                const token = {
-                    id: list[i].id,
-                    name: constants,
-                    qtd: 1
-                }
+        tokens.forEach((element) => {
+            list[list.findIndex((data) => data.id == element.id)].qtd += 1;
+        });
 
-                list2.push(token);
-            } else {
-                list2[index].qtd += 1;
-            }
-
-
-        }
+        // removendo epsilon e dollar da lista
+        list.splice(0, 2);
 
         let str = '';
-        list2.forEach((value)=>{
-            str+= `${value.name}: ${value.qtd}\n`;
+        list.forEach((value) => {
+            str += `${value.name}: ${value.qtd}\n`;
         });
 
         document.getElementById("output").textContent = str;
 
     } catch (error) {
-        console.error(error);
+        document.getElementById("output").textContent = `erro na linha ${error.position} - ${error.message}`;
     }
 
 }
@@ -749,7 +745,7 @@ const SCANNER_TABLE =
 const TOKEN_STATE = [-1, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 2, -1, -1, -1, -1, -1, 6, -1, -1, -1, -1, -1, -1, 7, -1, -1, 7, -1, -1, -1, -1, -1, -1, -1, 5, -1, -1, -1, 3, -1, 4];
 const SCANNER_ERROR =
     [
-        "Caractere n�o esperado",
+        "Caractere não esperado",
         "",
         "Erro identificando telefone",
         "Erro identificando agencia ou conta_corrente",
@@ -815,6 +811,7 @@ class Lexico {
     constructor(input) {
         this.input = input;
         this.position = 0;
+        this.line = 1;
     }
 
     nextToken() {
@@ -822,6 +819,7 @@ class Lexico {
             return null;
         }
 
+        
         let start = this.position;
         let state = 0;
         let lastState = 0;
@@ -843,9 +841,9 @@ class Lexico {
             }
         }
         if (endState < 0 || (endState != state && this.tokenForState(lastState) === -2)) {
-            console.error(`${SCANNER_ERROR[lastState]} - ${start}`);
-            throw new Error(SCANNER_ERROR[lastState]);
-            // throw new LexicalError(SCANNER_ERROR[lastState], start);
+
+            const line = this.input.substring(0, this.position).match('\n')?.length+1;
+            throw new LexicalError(`${SCANNER_ERROR[lastState]} - ${this.input.substring(start, this.position)}`, line || 1) ;
 
         }
 
@@ -894,6 +892,10 @@ class Lexico {
         if (this.hasInput()) {
             const char = this.input.charAt(this.position);
             this.position += 1;
+
+            if (char.charCodeAt(0) == 10) {
+                this.line += 1;
+            }
             return char;
         }
         else {
@@ -903,30 +905,26 @@ class Lexico {
 }
 
 
-// class AnalysisError {
-//     constructor(msg, position) {
-//         this.msg = msg;
-//         this.position = position || -1;
-//     }
+class AnalysisError extends Error {
+    constructor(msg, position) {
+        super(msg);
+        this.position = position || 1;
+    }
 
-//     getPosition() {
-//         return position;
-//     }
+    getPosition() {
+        return position;
+    }
 
-//     toString() {
-//         return this.msg.toString() + ", @ " + position;
-//     }
-// }
+    toString() {
+        return this.msg + ", @ " + this.position;
+    }
+}
 
-// class LexicalError extends AnalysisError {
-//     constructor(msg, position){
-//         super(msg,position);
-//     }
-
-//     constructor(msg){
-//         super(msg);
-//     }
-// }
+class LexicalError extends AnalysisError {
+    constructor(msg, position) {
+        super(msg, position);
+    }
+}
 
 class Constants {
     EPSILON = { id: 0, description: "EPSILON" };

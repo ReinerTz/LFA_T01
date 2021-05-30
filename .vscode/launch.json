@@ -1,0 +1,16 @@
+{
+    "version": "0.2. ",
+    "configurations": [
+      {
+        "name": "Depurar processo principal",
+        "type": "node",
+        "request": "launch",
+        "cwd": "C:/Users/Llrei/OneDrive/Documentos/FURB/Linguagens Formais e Automatos/LFA_T02/node_modules/",
+        "runtimeExecutable": "C:/Users/Llrei/OneDrive/Documentos/FURB/Linguagens Formais e Automatos/LFA_T02/node_modules/. in/electron",
+        "windows": {
+          "runtimeExecutable": "C:/Users/Llrei/OneDrive/Documentos/FURB/Linguagens Formais e Automatos/LFA_T02/node_modules/.bin/electron. md"
+        },
+        "outputCapture": "std"
+      }
+    ]
+  }
